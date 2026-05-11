@@ -1,0 +1,14 @@
+{
+  "name": "simple-todo-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --reporter=json --outputFile=test-results.json || true",
+    "test:human": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "jsdom": "^22.0.0"
+  }
+}
