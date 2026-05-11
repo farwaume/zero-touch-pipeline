@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Todo App</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 375px;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+        h1 { margin-top: 0; font-size: 1.5rem; }
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+        button#add-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            gap: 0.5rem;
+        }
+        .todo-text {
+            flex: 1;
+            cursor: pointer;
+        }
+        .todo-text.completed {
+            text-decoration: line-through;
+            color: #94a3b8;
+        }
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .stats {
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Todos</h1>
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="What needs to be done?">
+            <button id="add-btn">Add</button>
+        </div>
+        <ul id="todo-list"></ul>
+        <div class="stats">
+            <span id="remaining-count">0</span> items left
+        </div>
+    </div>
+
+    <script type="module">
+        import { addTodo, toggleTodo, deleteTodo, getRemainingCount } from './logic.js';
+
+        let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+
+        const input = document.getElementById('todo-input');
+        const addBtn = document.getElementById('add-btn');
+        const list = document.getElementById('todo-list');
+        const countDisplay = document.getElementById('remaining-count');
+
+        function saveAndRender() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+            render();
+        }
+
+        function render() {
+            list.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                
+                const text = document.createElement('span');
+                text.className = `todo-text ${todo.completed ? 'completed' : ''}`;
+                text.textContent = todo.text;
+                text.onclick = () => {
+                    todos = toggleTodo(todos, todo.id);
+                    saveAndRender();
+                };
+
+                const del = document.createElement('button');
+                del.className = 'delete-btn';
+                del.textContent = 'Delete';
+                del.onclick = () => {
+                    todos = deleteTodo(todos, todo.id);
+                    saveAndRender();
+                };
+
+                li.appendChild(text);
+                li.appendChild(del);
+                list.appendChild(li);
+            });
+            countDisplay.textContent = getRemainingCount(todos);
+        }
+
+        addBtn.onclick = () => {
+            const val = input.value;
+            if (val) {
+                todos = addTodo(todos, val);
+                input.value = '';
+                saveAndRender();
+            }
+        };
+
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') addBtn.click();
+        };
+
+        render();
+    </script>
+</body>
+</html>
