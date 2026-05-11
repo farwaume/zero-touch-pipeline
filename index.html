@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Todo App</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --danger: #dc2626;
+            --bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .app-container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 375px;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            margin: 0 0 1.5rem;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            ring: 2px var(--primary);
+        }
+
+        button#add-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button#add-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            gap: 0.75rem;
+        }
+
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+
+        .todo-text {
+            flex: 1;
+            cursor: pointer;
+            word-break: break-word;
+            transition: color 0.2s;
+        }
+
+        .completed {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 0.875rem;
+            padding: 0.25rem;
+            opacity: 0.7;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>Todo List</h1>
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="What needs to be done?" aria-label="New todo text">
+            <button id="add-btn">Add</button>
+        </div>
+        <ul id="todo-list"></ul>
+        <div class="footer" id="remaining-count">0 items left</div>
+    </div>
+
+    <script type="module">
+        import { addTodo, toggleTodo, deleteTodo, getRemainingCount } from './logic.js';
+
+        const input = document.getElementById('todo-input');
+        const addBtn = document.getElementById('add-btn');
+        const list = document.getElementById('todo-list');
+        const countDisplay = document.getElementById('remaining-count');
+
+        let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+
+        function render() {
+            list.innerHTML = '';
+            todos.forEach(todo => {
+                const li = document.createElement('li');
+                li.className = 'todo-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = todo.completed;
+                checkbox.setAttribute('aria-label', 'Toggle complete');
+                checkbox.onchange = () => handleToggle(todo.id);
+
+                const span = document.createElement('span');
+                span.className = `todo-text ${todo.completed ? 'completed' : ''}`;
+                span.textContent = todo.text;
+                span.onclick = () => handleToggle(todo.id);
+
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-btn';
+                delBtn.textContent = 'Delete';
+                delBtn.onclick = () => handleDelete(todo.id);
+
+                li.appendChild(checkbox);
+                li.appendChild(span);
+                li.appendChild(delBtn);
+                list.appendChild(li);
+            });
+
+            const count = getRemainingCount(todos);
+            countDisplay.textContent = `${count} item${count === 1 ? '' : 's'} left`;
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function handleAdd() {
+            const text = input.value;
+            const nextTodos = addTodo(todos, text);
+            if (nextTodos !== todos) {
+                todos = nextTodos;
+                input.value = '';
+                render();
+            }
+        }
+
+        function handleToggle(id) {
+            todos = toggleTodo(todos, id);
+            render();
+        }
+
+        function handleDelete(id) {
+            todos = deleteTodo(todos, id);
+            render();
+        }
+
+        addBtn.onclick = handleAdd;
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') handleAdd();
+        };
+
+        render();
+    </script>
+</body>
+</html>
